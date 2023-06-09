@@ -1,6 +1,6 @@
 ---
 title: "A07- ggplot"
-author: "YOUR NAME"
+author: "Raed Karkoub"
 date: "DATE"
 output: html_notebook
 ---
@@ -68,7 +68,19 @@ When you make your plot, you will likely find that the axis range is being set b
 
 
 ```{r}
-### Your code here
+
+Trips$duration<-as.numeric(Trips$edate-Trips$sdate)
+
+lower=quantile(Trips$duration,0.25) - 1.25*(quantile(Trips$duration,.75)-quantile(Trips$duration,0.25))
+
+upper=quantile(Trips$duration,0.75) + 1.25*(quantile(Trips$duration,.75)-quantile(Trips$duration,0.25))
+
+new_trips<-subset(Trips, duration>=lower & duration<=upper)
+
+ggplot(new_trips,aes(x=client,y=duration))+geom_boxplot()+labs(x="Client",y="Duration(seconds)")
+
+
+
 
 
 ```
@@ -102,59 +114,77 @@ You can use [Figure 18.3](https://dtkaplan.github.io/DataComputingEbook/project-
 ### Day of Year
 
 ```{r}
-### Your Code Here
+Trips %>%
+  ggplot(aes(x = lubridate::yday(sdate))) +
+  geom_histogram( color = "black", bins = 365) +
+  labs(x = "Day of the Year", y = "Frequency") +
+  ggtitle("Bike Use by Day of the Year")
 
 ```
 
 
-My observations here..... 
-
+the different peaks of the histogram shows higher bike usage in the warmer seasons than there is in the colder seasons. 
 
 ### Day of Week
 
 ```{r}
-### Your Code Here
+Trips %>%ggplot(aes(x = lubridate::wday(sdate, label = TRUE))) +
+  geom_bar( color = "black") +
+  scale_x_discrete(labels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")) +
+  labs(x = "Day of the Week", y = "Frequency") +
+  ggtitle("Bike Use by Day of the Week")
 
 ```
 
-
-My observations here..... 
+The plot shows that the weekends tend to have less people using their bikes.
 
 
 
 ### Hour of Day
 
 ```{r}
-### Your Code Here
+Trips %>%ggplot(aes(x = lubridate::hour(sdate))) +
+  geom_histogram( color = "black", bins = 24) +
+  labs(x = "Hour of the Day", y = "Frequency") +
+  ggtitle("Bike Use by Hour of the Day")
 
 ```
 
 
-My observations here..... 
+The ploy shows that the bike usage is lower during the earliest and latest parts of the day
 
 
 
 ### Minute of Hour
 
 ```{r}
-### Your Code Here
+Trips %>% ggplot(aes(x = lubridate::minute(sdate))) +
+  geom_histogram( color = "black", bins = 40
+      ) +
+  labs(x = "Minute in the Hour", y = "Frequency") +
+  ggtitle("Bike Use by Minute in the Hour")
 
 ```
-
-
-My observations here..... 
-
+There doesn't seem to be a clear trend showing based off of this plot
 
 ## Question 3: Grouping
 
 Group the bike rentals by three variables: hour of the day, day of the week, and client type. Find the total number of events in each grouping and plot this count versus hour. Use the group aesthetic to represent one of the other variables and faceting to represent the other. Comment on any general trends you see.
 
 ```{r}
-### My Code here
-
+Trips %>%
+  group_by(hour = lubridate::hour(sdate),
+           day_of_week = lubridate::wday(sdate, label = TRUE),
+           client_type) %>%
+  summarise(total_events = n()) %>%
+  ggplot(aes(x = hour, y = total_events, fill = client_type)) +
+  geom_col(position = "dodge", width = 0.8) +
+  facet_grid(day_of_week ~ .) +
+  labs(x = "Hour of the Day", y = "Total Events", fill = "Client Type") +
+  ggtitle("Bike Rentals by Hour, Day of the Week, and Client Type")
 ```
 
-My comments here.....
+
 
 
 ## Question 4: How Far? 
@@ -213,7 +243,10 @@ Our goal here is to recreate [Figure 18.5](https://dtkaplan.github.io/DataComput
 
 
 ```{r}
-### My code here
+Tripsdist<-inner_join(Trips,PairDistances,by=c("sstation","estation"))
+
+ggplot()+geom_density(data=Tripsdist,aes(x=distance,color="Ride Distance",))+geom_density(data=PairDistances,aes(x=distance,color="Station Pair Distance"))+labs(x="Distance",y="Density")
+  
 
 ```
 
